@@ -43,21 +43,20 @@ public static class Commands
 
     public static async Task ShowSummaryAsync(IAssetRepository repo)
     {
-        var assets = await repo.GetAllActiveAsync();
-        // TODO (Learning Exercise 1): Replace with multi-mapped query
-        // that fetches latest balance per asset in one round trip.
+        var assets = await repo.GetAllActiveWithLatestBalanceAsync();
 
         Console.WriteLine($"\nASSET SUMMARY — {DateTime.Now:yyyy-MM-dd}");
-        Console.WriteLine(new string('─', 50));
+        Console.WriteLine(new string('─', 75));
 
         decimal total = 0;
         foreach (var a in assets)
         {
-            Console.WriteLine($"{a.Name,-25} {a.Category,-15} (no balance yet)");
+            Console.WriteLine($"{a.Name,-50}{a.Category,-15}{a.LatestBalance?.Balance.ToString("C") ?? "N/A",10}");
+            total += a.LatestBalance?.Balance ?? 0;
         }
 
-        Console.WriteLine(new string('─', 50));
-        Console.WriteLine($"{"Total",-40} {total,9:C}");
+        Console.WriteLine(new string('─', 75));
+        Console.WriteLine($"{"Total",-65} {total,9:C}");
         Console.WriteLine();
     }
 

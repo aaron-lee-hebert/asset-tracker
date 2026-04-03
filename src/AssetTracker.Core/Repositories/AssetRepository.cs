@@ -20,6 +20,43 @@ public class AssetRepository(ConnectionFactory factory) : IAssetRepository
         ");
     }
 
+    public async Task<IEnumerable<Asset>> GetAllActiveWithLatestBalanceAsync()
+    {
+        using var conn = _factory.Create();
+
+        var sql = @"
+            WITH LatestBalances AS (
+                SELECT 
+                    Id,
+                    AssetId, 
+                    Balance,
+                    RecordedAt,
+                    Note,
+                    ROW_NUMBER() OVER (PARTITION BY AssetId ORDER BY RecordedAt DESC) AS rn
+                FROM BalanceEntries
+            )
+            SELECT 
+                a.Id, a.Name, a.Category, a.Description, a.CreatedAt, a.IsActive,
+                lb.Id, lb.AssetId, lb.Balance, lb.RecordedAt, lb.Note
+            FROM Assets a
+            LEFT JOIN LatestBalances lb ON a.Id = lb.AssetId and lb.rn = 1
+            WHERE a.IsActive = 1
+            ORDER BY a.Name
+        ";
+
+        var assets = await conn.QueryAsync<Asset, BalanceEntry, Asset>(
+            sql,
+            (asset, balance) =>
+            {
+                asset.LatestBalance = balance;
+                return asset;
+            },
+            splitOn: "Id"
+        );
+
+        return assets;
+    }
+
     public async Task<Asset?> GetByIdAsync(int id)
     {
         using var conn = _factory.Create();
