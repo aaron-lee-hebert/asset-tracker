@@ -16,7 +16,7 @@ var factory = new ConnectionFactory(connectionString);
 
 var repo = new AssetRepository(factory);
 
-Console.WriteLine("Asset Tracker. Command: add, update, summary, history, quit");
+Console.WriteLine("Asset Tracker. Command: add, addb, update, summary, history, quit");
 Console.WriteLine();
 
 while (true)
@@ -33,6 +33,9 @@ while (true)
         {
             case "add":
                 await AddAssetAsync(repo, cmdArgs);
+                break;
+            case "addb":
+                await AddAssetWithBalanceAsync(repo, cmdArgs);
                 break;
             case "update":
                 await UpdateBalanceAsync(repo, cmdArgs);

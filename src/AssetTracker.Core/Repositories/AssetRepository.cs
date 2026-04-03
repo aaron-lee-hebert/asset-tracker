@@ -88,6 +88,34 @@ public class AssetRepository(ConnectionFactory factory) : IAssetRepository
         ", p);
     }
 
+    public async Task<int> AddWithInitialBalanceAsync(string name, string category, string? description, decimal initialBalance) {
+        using var conn = _factory.Create();
+        conn.Open();
+
+        using var transaction = conn.BeginTransaction();
+
+        try {
+            var assetId = await conn.ExecuteScalarAsync<int>(@"
+                INSERT INTO Assets (Name, Category, Description)
+                OUTPUT INSERTED.Id
+                VALUES (@Name, @Category, @Description)
+            ", new { Name = name, Category = category, Description = description }, transaction: transaction);
+
+            await conn.ExecuteAsync(@"
+                INSERT INTO BalanceEntries (AssetId, Balance, Note)
+                VALUES (@AssetId, @Balance, @Note)
+            ", new { AssetId = assetId, Balance = initialBalance, Note = description ?? "Initial balance" }, transaction: transaction);
+
+            transaction.Commit();
+            return assetId;
+        } 
+        catch 
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
     public async Task RecordBalanceAsync(int assetId, decimal balance, string? note)
     {
         using var conn = _factory.Create();

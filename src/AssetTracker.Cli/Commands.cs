@@ -6,19 +6,42 @@ public static class Commands
 {
     public static async Task AddAssetAsync(IAssetRepository repo, string args)
     {
-        // Expected Input: "Chase Checking" Checking
-        var parts = args.Split('"', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length < 2)
+        if (!TryExtractQuotedName(args, out var name, out var remainder))
         {
-            Console.WriteLine("Invalid format. Use: add \"Asset Name\" Category");
+            Console.WriteLine("Invalid format. Use: add <\"Asset Name\"> <category>");
             return;
         }
 
-        var name = parts[0].Trim();
-        var category = parts[1].Trim();
+        var category = remainder.Trim();
+        if (string.IsNullOrEmpty(category))
+        {
+            Console.WriteLine("Invalid format. Use: add <\"Asset Name\"> <category>");
+            return;
+        }
 
         var id = await repo.AddAsync(name, category, null);
         Console.WriteLine($"Asset added (Id: {id})");
+    }
+
+    public static async Task AddAssetWithBalanceAsync(IAssetRepository repo, string args)
+    {
+        if (!TryExtractQuotedName(args, out var name, out var remainder))
+        {
+            Console.WriteLine("Invalid format. Use: addb <\"Asset Name\"> <category> <initialBalance>");
+            return;
+        }
+
+        var trailing = remainder.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (trailing.Length < 2 || !decimal.TryParse(trailing[1], out var initialBalance))
+        {
+            Console.WriteLine("Invalid format. Use: addb <\"Asset Name\"> <category> <initialBalance>");
+            return;
+        }
+
+        var category = trailing[0];
+
+        var id = await repo.AddWithInitialBalanceAsync(name, category, null, initialBalance);
+        Console.WriteLine($"Asset added (Id: {id}) with an initial balance of {initialBalance:C}");
     }
 
     public static async Task UpdateBalanceAsync(IAssetRepository repo, string args)
@@ -73,5 +96,20 @@ public static class Commands
             Console.WriteLine($"  {e.RecordedAt:yyyy-MM-dd HH:mm}  {e.Balance,12:C}  {e.Note}");
 
         Console.WriteLine();
+    }
+
+    private static bool TryExtractQuotedName(string input, out string name, out string remainder)
+    {
+        name = string.Empty;
+        remainder = string.Empty;
+
+        var open = input.IndexOf('"');
+        var close = input.IndexOf('"', open + 1);
+        if (open < 0 || close < 0)
+            return false;
+
+        name = input[(open + 1)..close];
+        remainder = input[(close + 1)..];
+        return true;
     }
 }
