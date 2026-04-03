@@ -1,18 +1,12 @@
-using System.Data;
 using Dapper;
 using AssetTracker.Core.Database;
 using AssetTracker.Core.Domain;
 
 namespace AssetTracker.Core.Repositories;
 
-public class AssetRepository : IAssetRepository
+public class AssetRepository(ConnectionFactory factory) : IAssetRepository
 {
-    private readonly ConnectionFactory _factory;
-
-    public AssetRepository(ConnectionFactory factory)
-    {
-        _factory = factory;
-    }
+    private readonly ConnectionFactory _factory = factory;
 
     public async Task<IEnumerable<Asset>> GetAllActiveAsync()
     {
