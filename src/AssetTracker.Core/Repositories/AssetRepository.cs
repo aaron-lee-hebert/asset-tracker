@@ -1,3 +1,4 @@
+using System.Data;
 using Dapper;
 using AssetTracker.Core.Database;
 using AssetTracker.Core.Domain;
@@ -61,47 +62,59 @@ public class AssetRepository(ConnectionFactory factory) : IAssetRepository
     {
         using var conn = _factory.Create();
 
+        var p = new DynamicParameters();
+        p.Add("Id", id, DbType.Int32);
+
         return await conn.QuerySingleOrDefaultAsync<Asset>(@"
             SELECT Id, Name, Category, Description, CreatedAt, IsActive
             FROM Assets
             WHERE Id = @Id
-        ", new { Id = id });
-        // ^^^ @Id binds to the anonymous object property. Dapper handles
-        // the SqlParameter creation — no SqlCommand boilerplate needed.
+        ", p);
     }
 
     public async Task<int> AddAsync(string name, string category, string? description)
     {
         using var conn = _factory.Create();
 
-        // OUTPUT INSERTED.Id returns the identity value in one round trip.
-        // No need for a second SELECT SCOPE_IDENTITY() call.
+        var p = new DynamicParameters();
+        p.Add("Name", name, DbType.String, size: 100);
+        p.Add("Category", category, DbType.String, size: 50);
+        p.Add("Description", description, DbType.String, size: 255);
+
         return await conn.ExecuteScalarAsync<int>(@"
             INSERT INTO Assets (Name, Category, Description)
             OUTPUT INSERTED.Id
             VALUES (@Name, @Category, @Description)
-        ", new { Name = name, Category = category, Description = description });
+        ", p);
     }
 
     public async Task RecordBalanceAsync(int assetId, decimal balance, string? note)
     {
         using var conn = _factory.Create();
 
+        var p = new DynamicParameters();
+        p.Add("AssetId", assetId, DbType.Int32);
+        p.Add("Balance", balance, DbType.Decimal);
+        p.Add("Note", note, DbType.String, size: 255);
+
         await conn.ExecuteAsync(@"
             INSERT INTO BalanceEntries (AssetId, Balance, Note)
             VALUES (@AssetId, @Balance, @Note)
-        ", new { AssetId = assetId, Balance = balance, Note = note });
+        ", p);
     }
 
     public async Task<IEnumerable<BalanceEntry>> GetBalanceHistoryAsync(int assetId)
     {
         using var conn = _factory.Create();
 
+        var p = new DynamicParameters();
+        p.Add("AssetId", assetId, DbType.Int32);
+
         return await conn.QueryAsync<BalanceEntry>(@"
             SELECT Id, AssetId, Balance, RecordedAt, Note
             FROM BalanceEntries
             WHERE AssetId = @AssetId
             ORDER BY RecordedAt DESC
-        ", new { AssetId = assetId });
+        ", p);
     }
 }
