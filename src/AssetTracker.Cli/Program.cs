@@ -12,7 +12,13 @@ var config = new ConfigurationBuilder()
 var connectionString = config.GetConnectionString("AssetTracker")
     ?? throw new InvalidOperationException("Connection string 'AssetTracker' not found.");
 
+var migrationsPath = config["Paths:Migrations"]
+    ?? throw new InvalidOperationException("Migrations path not configuted");
+
 var factory = new ConnectionFactory(connectionString);
+
+var migrationRunner = new MigrationRunner(factory, migrationsPath);
+await migrationRunner.RunAsync();
 
 var repo = new AssetRepository(factory);
 
