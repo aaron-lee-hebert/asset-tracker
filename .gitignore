@@ -419,3 +419,7 @@ FodyWeavers.xsd
 
 appsettings.local.json
 *.user
+
+# Git worktrees (local isolated workspaces — never committed)
+.worktrees/
+
