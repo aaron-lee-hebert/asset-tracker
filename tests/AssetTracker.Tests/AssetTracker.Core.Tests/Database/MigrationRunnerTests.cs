@@ -6,6 +6,9 @@ namespace AssetTracker.Tests;
 [TestFixture]
 public class MigrationRunnerTests
 {
+    [OneTimeSetUp]
+    public void ConfigureDapper() => AssetTracker.Core.Database.DapperConfig.Configure();
+
     private string _migrationsPath;
     private ConnectionFactory _factory;
 

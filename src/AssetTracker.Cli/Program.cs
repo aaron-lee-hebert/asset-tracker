@@ -3,6 +3,8 @@ using AssetTracker.Core.Database;
 using AssetTracker.Core.Repositories;
 using static AssetTracker.Cli.Commands;
 
+DapperConfig.Configure();
+
 var config = new ConfigurationBuilder()
     .SetBasePath(AppContext.BaseDirectory)
     .AddJsonFile("appsettings.json", optional: false)

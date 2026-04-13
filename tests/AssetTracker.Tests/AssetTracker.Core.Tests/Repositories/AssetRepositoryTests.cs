@@ -6,6 +6,9 @@ namespace AssetTracker.Tests.Repositoriies;
 [TestFixture]
 public class AssetRepositoryTests
 {
+    [OneTimeSetUp]
+    public void ConfigureDapper() => AssetTracker.Core.Database.DapperConfig.Configure();
+
     private AssetRepository _repository;
 
     [SetUp]
