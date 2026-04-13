@@ -1,5 +1,5 @@
 using System.Data;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 
 namespace AssetTracker.Core.Database
 {
@@ -7,11 +7,11 @@ namespace AssetTracker.Core.Database
     {
         private readonly string _connectionString = connectionString;
 
-        // Returns IDbConnection, not SqlConnection.
+        // Returns IDbConnection, not NpgsqlConnection.
         // This keeps callers decoupled from the provider.
         public IDbConnection Create()
         {
-            return new SqlConnection(_connectionString);
+            return new NpgsqlConnection(_connectionString);
         }
     }
 }
