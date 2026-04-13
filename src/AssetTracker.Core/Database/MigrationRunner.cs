@@ -21,21 +21,20 @@ namespace AssetTracker.Core.Database
 
         private static async Task EnsureMigrationsTableAsync(IDbConnection conn)
         {
-            // OBJECT_ID is a safer way to check if an object exists, instead
-            // of using IF NOT EXISTS.
+            // CREATE TABLE IF NOT EXISTS is the idiomatic Postgres equivalent
+            // of the OBJECT_ID check we had under SQL Server.
             await conn.ExecuteAsync(@"
-                IF OBJECT_ID('__Migrations', 'U') IS NULL
-                CREATE TABLE __Migrations (
-                    Id          INT IDENTITY PRIMARY KEY,
-                    FileName    NVARCHAR(255) NOT NULL,
-                    AppliedAt   DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+                CREATE TABLE IF NOT EXISTS __migrations (
+                    id          SERIAL PRIMARY KEY,
+                    file_name   VARCHAR(255) NOT NULL,
+                    applied_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
                 )
             ");
         }
 
         private static async Task<IEnumerable<string>> GetAppliedMigrationsAsync(IDbConnection conn)
         {
-            return await conn.QueryAsync<string>("SELECT FileName FROM __Migrations");
+            return await conn.QueryAsync<string>("SELECT file_name FROM __migrations");
         }
 
         private IEnumerable<string> GetPendingMigrations(IEnumerable<string> applied)
@@ -55,7 +54,7 @@ namespace AssetTracker.Core.Database
 
             await conn.ExecuteAsync(sql);
             await conn.ExecuteAsync(
-                "INSERT INTO __Migrations (FileName) VALUES (@FileName)",
+                "INSERT INTO __migrations (file_name) VALUES (@FileName)",
                 new { FileName = fileName }
             );
         }
