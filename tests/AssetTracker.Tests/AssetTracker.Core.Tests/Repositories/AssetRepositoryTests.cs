@@ -1,3 +1,4 @@
+using AssetTracker.Core.Database;
 using AssetTracker.Core.Repositories;
 using Dapper;
 
@@ -7,7 +8,7 @@ namespace AssetTracker.Tests.Repositoriies;
 public class AssetRepositoryTests
 {
     [OneTimeSetUp]
-    public void ConfigureDapper() => AssetTracker.Core.Database.DapperConfig.Configure();
+    public void ConfigureDapper() => DapperConfig.Configure();
 
     private AssetRepository _repository;
 
