@@ -4,6 +4,6 @@ CREATE TABLE assets
     name        VARCHAR(100) NOT NULL,
     category    VARCHAR(50)  NOT NULL,
     description VARCHAR(255) NULL,
-    created_at  TIMESTAMPTZ  NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     is_active   BOOLEAN      NOT NULL DEFAULT TRUE
 );

@@ -3,7 +3,7 @@ CREATE TABLE balance_entries
     id          SERIAL PRIMARY KEY,
     asset_id    INT            NOT NULL REFERENCES assets(id),
     balance     DECIMAL(18, 2) NOT NULL,
-    recorded_at TIMESTAMPTZ    NOT NULL DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    recorded_at TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     note        VARCHAR(255)   NULL
 );
 
