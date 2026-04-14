@@ -20,7 +20,7 @@ public class AssetRepositoryTests
         // Clean slate before each test.
         using var conn = TestConnectionFactory.Create().Create();
         conn.Open();
-        await conn.ExecuteAsync("DELETE FROM BalanceEntries; DELETE From Assets;");
+        await conn.ExecuteAsync("DELETE FROM balance_entries; DELETE FROM assets;");
     }
 
     [Test]
@@ -37,7 +37,7 @@ public class AssetRepositoryTests
         await _repository.AddAsync("Active Account", "Checking", null);
         using var conn = TestConnectionFactory.Create().Create();
         conn.Open();
-        await conn.ExecuteAsync("INSERT INTO Assets (Name, Category, Description, CreatedAt, IsActive) VALUES ('Inactive', 'Checking', NULL, GETDATE(), 0);");
+        await conn.ExecuteAsync("INSERT INTO assets (name, category, description, created_at, is_active) VALUES ('Inactive', 'Checking', NULL, NOW(), FALSE);");
 
         // Act  
         var results = await _repository.GetAllActiveAsync();
