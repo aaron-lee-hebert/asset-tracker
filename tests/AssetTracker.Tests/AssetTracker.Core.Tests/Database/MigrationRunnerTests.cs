@@ -73,6 +73,7 @@ public class MigrationRunnerTests
             SELECT COUNT(*)
             FROM INFORMATION_SCHEMA.TABLES
             WHERE TABLE_NAME = 'test_assets'
+              AND TABLE_SCHEMA = 'public'
         ");
         Assert.That(tableExists, Is.EqualTo(1));
     }

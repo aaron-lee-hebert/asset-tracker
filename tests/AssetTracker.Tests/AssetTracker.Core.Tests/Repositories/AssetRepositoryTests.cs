@@ -2,7 +2,7 @@ using AssetTracker.Core.Database;
 using AssetTracker.Core.Repositories;
 using Dapper;
 
-namespace AssetTracker.Tests.Repositoriies;
+namespace AssetTracker.Tests.Repositories;
 
 [TestFixture]
 public class AssetRepositoryTests
