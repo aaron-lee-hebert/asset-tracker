@@ -14,10 +14,10 @@ public class AssetRepository(ConnectionFactory factory) : IAssetRepository
         using var conn = _factory.Create();
 
         return await conn.QueryAsync<Asset>(@"
-            SELECT Id, Name, Category, Description, CreatedAt, IsActive
-            FROM Assets
-            WHERE IsActive = 1
-            ORDER BY Name
+            SELECT id, name, category, description, created_at, is_active
+            FROM assets
+            WHERE is_active = TRUE
+            ORDER BY name
         ");
     }
 
@@ -26,23 +26,23 @@ public class AssetRepository(ConnectionFactory factory) : IAssetRepository
         using var conn = _factory.Create();
 
         var sql = @"
-            WITH LatestBalances AS (
-                SELECT 
-                    Id,
-                    AssetId, 
-                    Balance,
-                    RecordedAt,
-                    Note,
-                    ROW_NUMBER() OVER (PARTITION BY AssetId ORDER BY RecordedAt DESC) AS rn
-                FROM BalanceEntries
+            WITH latest_balances AS (
+                SELECT
+                    id,
+                    asset_id,
+                    balance,
+                    recorded_at,
+                    note,
+                    ROW_NUMBER() OVER (PARTITION BY asset_id ORDER BY recorded_at DESC) AS rn
+                FROM balance_entries
             )
-            SELECT 
-                a.Id, a.Name, a.Category, a.Description, a.CreatedAt, a.IsActive,
-                lb.Id, lb.AssetId, lb.Balance, lb.RecordedAt, lb.Note
-            FROM Assets a
-            LEFT JOIN LatestBalances lb ON a.Id = lb.AssetId and lb.rn = 1
-            WHERE a.IsActive = 1
-            ORDER BY a.Name
+            SELECT
+                a.id, a.name, a.category, a.description, a.created_at, a.is_active,
+                lb.id, lb.asset_id, lb.balance, lb.recorded_at, lb.note
+            FROM assets a
+            LEFT JOIN latest_balances lb ON a.id = lb.asset_id AND lb.rn = 1
+            WHERE a.is_active = TRUE
+            ORDER BY a.name
         ";
 
         var assets = await conn.QueryAsync<Asset, BalanceEntry, Asset>(
@@ -52,7 +52,7 @@ public class AssetRepository(ConnectionFactory factory) : IAssetRepository
                 asset.LatestBalance = balance;
                 return asset;
             },
-            splitOn: "Id"
+            splitOn: "id"
         );
 
         return assets;
@@ -66,9 +66,9 @@ public class AssetRepository(ConnectionFactory factory) : IAssetRepository
         p.Add("Id", id, DbType.Int32);
 
         return await conn.QuerySingleOrDefaultAsync<Asset>(@"
-            SELECT Id, Name, Category, Description, CreatedAt, IsActive
-            FROM Assets
-            WHERE Id = @Id
+            SELECT id, name, category, description, created_at, is_active
+            FROM assets
+            WHERE id = @Id
         ", p);
     }
 
@@ -82,9 +82,9 @@ public class AssetRepository(ConnectionFactory factory) : IAssetRepository
         p.Add("Description", description, DbType.String, size: 255);
 
         return await conn.ExecuteScalarAsync<int>(@"
-            INSERT INTO Assets (Name, Category, Description)
-            OUTPUT INSERTED.Id
+            INSERT INTO assets (name, category, description)
             VALUES (@Name, @Category, @Description)
+            RETURNING id
         ", p);
     }
 
@@ -96,20 +96,20 @@ public class AssetRepository(ConnectionFactory factory) : IAssetRepository
 
         try {
             var assetId = await conn.ExecuteScalarAsync<int>(@"
-                INSERT INTO Assets (Name, Category, Description)
-                OUTPUT INSERTED.Id
+                INSERT INTO assets (name, category, description)
                 VALUES (@Name, @Category, @Description)
+                RETURNING id
             ", new { Name = name, Category = category, Description = description }, transaction: transaction);
 
             await conn.ExecuteAsync(@"
-                INSERT INTO BalanceEntries (AssetId, Balance, Note)
+                INSERT INTO balance_entries (asset_id, balance, note)
                 VALUES (@AssetId, @Balance, @Note)
             ", new { AssetId = assetId, Balance = initialBalance, Note = description ?? "Initial balance" }, transaction: transaction);
 
             transaction.Commit();
             return assetId;
-        } 
-        catch 
+        }
+        catch
         {
             transaction.Rollback();
             throw;
@@ -126,7 +126,7 @@ public class AssetRepository(ConnectionFactory factory) : IAssetRepository
         p.Add("Note", note, DbType.String, size: 255);
 
         await conn.ExecuteAsync(@"
-            INSERT INTO BalanceEntries (AssetId, Balance, Note)
+            INSERT INTO balance_entries (asset_id, balance, note)
             VALUES (@AssetId, @Balance, @Note)
         ", p);
     }
@@ -139,10 +139,10 @@ public class AssetRepository(ConnectionFactory factory) : IAssetRepository
         p.Add("AssetId", assetId, DbType.Int32);
 
         return await conn.QueryAsync<BalanceEntry>(@"
-            SELECT Id, AssetId, Balance, RecordedAt, Note
-            FROM BalanceEntries
-            WHERE AssetId = @AssetId
-            ORDER BY RecordedAt DESC
+            SELECT id, asset_id, balance, recorded_at, note
+            FROM balance_entries
+            WHERE asset_id = @AssetId
+            ORDER BY recorded_at DESC
         ", p);
     }
 }

@@ -1,9 +1,9 @@
-CREATE TABLE Assets
+CREATE TABLE assets
 (
-    Id INT IDENTITY PRIMARY KEY,
-    Name NVARCHAR(100) NOT NULL,
-    Category NVARCHAR(50) NOT NULL,
-    Description NVARCHAR(255) NULL,
-    CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
-    IsActive BIT NOT NULL DEFAULT 1
+    id          SERIAL PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL,
+    category    VARCHAR(50)  NOT NULL,
+    description VARCHAR(255) NULL,
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    is_active   BOOLEAN      NOT NULL DEFAULT TRUE
 );

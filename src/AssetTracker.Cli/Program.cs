@@ -3,10 +3,13 @@ using AssetTracker.Core.Database;
 using AssetTracker.Core.Repositories;
 using static AssetTracker.Cli.Commands;
 
+DapperConfig.Configure();
+
 var config = new ConfigurationBuilder()
     .SetBasePath(AppContext.BaseDirectory)
     .AddJsonFile("appsettings.json", optional: false)
     .AddJsonFile("appsettings.local.json", optional: true) // gitignored overrides
+    .AddUserSecrets<Program>()
     .Build();
 
 var connectionString = config.GetConnectionString("AssetTracker")

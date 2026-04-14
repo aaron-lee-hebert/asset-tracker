@@ -6,6 +6,9 @@ namespace AssetTracker.Tests;
 [TestFixture]
 public class MigrationRunnerTests
 {
+    [OneTimeSetUp]
+    public void ConfigureDapper() => DapperConfig.Configure();
+
     private string _migrationsPath;
     private ConnectionFactory _factory;
 
@@ -25,8 +28,8 @@ public class MigrationRunnerTests
 
         using var conn = _factory.Create();
         await conn.ExecuteAsync(@"
-            DROP TABLE IF EXISTS TestAssets;
-            DROP TABLE IF EXISTS __Migrations;
+            DROP TABLE IF EXISTS test_assets;
+            DROP TABLE IF EXISTS __migrations;
         ");
     }
 
@@ -42,9 +45,9 @@ public class MigrationRunnerTests
         var scriptName = "001_CreateTestAssets.sql";
         var scriptPath = Path.Combine(_migrationsPath, scriptName);
         await File.WriteAllTextAsync(scriptPath, @"
-            CREATE TABLE TestAssets (
-                Id   INT IDENTITY PRIMARY KEY,
-                Name NVARCHAR(100) NOT NULL
+            CREATE TABLE test_assets (
+                id   SERIAL PRIMARY KEY,
+                name VARCHAR(100) NOT NULL
             );
         ");
 
@@ -59,7 +62,7 @@ public class MigrationRunnerTests
         // Assertion 1: The migration was recorded in __Migrations.
         // This verifies the runner is tracking what it applied.
         var appliedMigrations = await conn.QueryAsync<string>(
-            "SELECT FileName FROM __Migrations"
+            "SELECT file_name FROM __migrations"
         );
         Assert.That(appliedMigrations, Contains.Item(scriptName));
 
@@ -69,7 +72,8 @@ public class MigrationRunnerTests
         var tableExists = await conn.ExecuteScalarAsync<int>(@"
             SELECT COUNT(*)
             FROM INFORMATION_SCHEMA.TABLES
-            WHERE TABLE_NAME = 'TestAssets'
+            WHERE TABLE_NAME = 'test_assets'
+              AND TABLE_SCHEMA = 'public'
         ");
         Assert.That(tableExists, Is.EqualTo(1));
     }
