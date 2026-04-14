@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(gh repo:*)",
-      "Bash(gh issue create --repo aaron-lee-hebert/asset-tracker --title 'Add a simple migration runner' --body ':*)",
-      "Bash(gh issue create --repo aaron-lee-hebert/asset-tracker --title 'Add networth-history command with trend data' --body ':*)"
-    ]
-  }
-}

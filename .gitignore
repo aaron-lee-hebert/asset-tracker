@@ -423,3 +423,5 @@ appsettings.local.json
 # Git worktrees (local isolated workspaces — never committed)
 .worktrees/
 
+# Claude Files
+.claude/
